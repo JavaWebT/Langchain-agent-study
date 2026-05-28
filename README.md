@@ -75,9 +75,14 @@ LangChain提供的三种核心的工具创建方式对比特点如下：
 
 ## Agent 长短期记忆
 ### 短期记忆
-- create_agent中通过指定 **checkpointer** 参数来启用短期记忆，InMemorySaver 表示将会话存储在内存中，每次对话迭代后自动保存对话状态。
+- create_agent中通过指定 **checkpointer** 参数来启用短期记忆，InMemorySaver 表示将会话存储在内存中，每次对话迭代后自动保存对话状态，此外也能将其存入到数据库中
 - 通过config={"configurable": {"thread_id": "conversation_1"}}指定会话唯一标识，**thread_id** 用于隔离不同用户的对话上下文。相同thread_id保证状态连续性，不同ID则创建新记忆空间。
 - 每次invoke后自动触发会话状态保存，根据不同的 thread_id 追加保存会话内容。
+#### 自定义状态
+- 自定义状态 继承自 AgentSate, 同thread_id的后续会话都会使用该自定义状态。该状态先在create_agent时设置state_schema == 自定义状态，在调用 Agent时为其赋值
+#### 短期记忆的访问与修改
+- 访问，ToolRuntime包含 context、state、tool_call_id 等信息
+- 修改，通过Tools修改短期记忆要求工具返回Command对象，Command对象中包含update字段，该update中使用K,V dict方式指定更新用户自定义状态，同时update中还必须指定“message”字段返回工具执行结果到消息历史中。通过tool在 command对象的 update 中对Context,以及tool_call_id的 K,V即DICT修改 ,最后tool返回 command 的update 完成对记忆的修改，return command(update = updates),
 ### 长期记忆
 
   
